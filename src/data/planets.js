@@ -1,0 +1,166 @@
+// Planetary data for Starpath Solar System
+// Distances use compressed scale (1 AU = 40 units)
+// Sizes use logarithmic compression for visual clarity
+
+export const SUN = {
+  name: 'Sun',
+  nameCn: '太阳',
+  diameter: 1391400,
+  distance: 0,
+  color: 0xffd700,
+  size: 6,
+  description: '太阳是太阳系的中心恒星，占太阳系总质量的 99.86%，是地球上生命的能量源泉。',
+  fact: '太阳每秒将 6 亿吨氢转化为氦，释放出巨大的核聚变能量。',
+  gravity: '274 m/s²',
+  orbitPeriod: '—',
+  rotatePeriod: '约 25 天 (赤道)',
+  moons: 0,
+};
+
+export const PLANETS = [
+  {
+    name: 'Mercury',
+    nameCn: '水星',
+    diameter: 4879,
+    distance: 0.39,
+    orbitSpeed: 4.15,
+    rotateSpeed: 0.017,
+    color: 0x8c7853,
+    size: 0.8,
+    description: '水星是距离太阳最近的行星，表面布满陨石坑，昼夜温差可达 600°C。',
+    fact: '水星上的一天（日出到下一次日出）等于地球上的 176 天。',
+    gravity: '3.7 m/s²',
+    orbitPeriod: '88 天',
+    rotatePeriod: '58.6 天',
+    moons: 0,
+  },
+  {
+    name: 'Venus',
+    nameCn: '金星',
+    diameter: 12104,
+    distance: 0.72,
+    orbitSpeed: 1.62,
+    rotateSpeed: -0.004,
+    color: 0xffc649,
+    size: 1.8,
+    description: '金星是太阳系中最热的行星，表面温度高达 462°C，大气中 96% 是二氧化碳。',
+    fact: '金星的自转方向与其他行星相反——太阳从西边升起。',
+    gravity: '8.87 m/s²',
+    orbitPeriod: '225 天',
+    rotatePeriod: '243 天',
+    moons: 0,
+  },
+  {
+    name: 'Earth',
+    nameCn: '地球',
+    diameter: 12742,
+    distance: 1.0,
+    orbitSpeed: 1.0,
+    rotateSpeed: 1.0,
+    color: 0x4a90d9,
+    size: 2.0,
+    description: '地球是太阳系中唯一已知存在生命的行星，表面 71% 被液态水覆盖，有一颗天然卫星月球。',
+    fact: '地球的自转正在逐渐减慢，每 100 年增加约 1.8 毫秒。',
+    gravity: '9.81 m/s²',
+    orbitPeriod: '365.25 天',
+    rotatePeriod: '23h 56m',
+    moons: 1,
+    hasMoon: true,
+  },
+  {
+    name: 'Mars',
+    nameCn: '火星',
+    diameter: 6779,
+    distance: 1.52,
+    orbitSpeed: 0.53,
+    rotateSpeed: 0.97,
+    color: 0xc1440e,
+    size: 1.4,
+    description: '火星被称为"红色星球"，表面富含氧化铁，拥有太阳系中最大的火山——奥林匹斯山。',
+    fact: '火星上的奥林匹斯山高约 22 公里，是珠穆朗玛峰高度的近 3 倍。',
+    gravity: '3.71 m/s²',
+    orbitPeriod: '687 天',
+    rotatePeriod: '24h 37m',
+    moons: 2,
+  },
+  {
+    name: 'Jupiter',
+    nameCn: '木星',
+    diameter: 139820,
+    distance: 5.2,
+    orbitSpeed: 0.084,
+    rotateSpeed: 2.4,
+    color: 0xd4a373,
+    size: 4.5,
+    description: '木星是太阳系最大的行星，质量是其他所有行星总和的 2.5 倍，著名的大红斑是一个持续数百年的风暴。',
+    fact: '木星的大红斑风暴已经持续了至少 350 年，可以装下 2-3 个地球。',
+    gravity: '24.79 m/s²',
+    orbitPeriod: '11.86 年',
+    rotatePeriod: '9h 56m',
+    moons: 95,
+  },
+  {
+    name: 'Saturn',
+    nameCn: '土星',
+    diameter: 116460,
+    distance: 9.54,
+    orbitSpeed: 0.034,
+    rotateSpeed: 2.2,
+    color: 0xe8d5a9,
+    size: 3.8,
+    description: '土星以其壮观的环系统而闻名，主要由冰粒和岩石碎片组成，密度比水还小。',
+    fact: '土星的密度比水还低——如果有足够大的海洋，土星会浮在水面上。',
+    gravity: '10.44 m/s²',
+    orbitPeriod: '29.46 年',
+    rotatePeriod: '10h 42m',
+    moons: 146,
+    hasRings: true,
+  },
+  {
+    name: 'Uranus',
+    nameCn: '天王星',
+    diameter: 50724,
+    distance: 19.2,
+    orbitSpeed: 0.012,
+    rotateSpeed: -1.4,
+    color: 0x4fd0e7,
+    size: 3.0,
+    description: '天王星是一颗冰巨星，独特地躺着自转——自转轴倾角高达 98°，像一个滚动的球。',
+    fact: '天王星的自转轴几乎平行于公转轨道面，可能是远古时被巨大天体撞击所致。',
+    gravity: '8.69 m/s²',
+    orbitPeriod: '84 年',
+    rotatePeriod: '17h 14m',
+    moons: 28,
+  },
+  {
+    name: 'Neptune',
+    nameCn: '海王星',
+    diameter: 49244,
+    distance: 30.06,
+    orbitSpeed: 0.006,
+    rotateSpeed: 1.5,
+    color: 0x3b6cf6,
+    size: 2.9,
+    description: '海王星是距离太阳最远的行星，有着太阳系中最强的风暴，风速可达 2,100 km/h。',
+    fact: '海王星是唯一通过数学预测发现的行星——1846 年由伽勒根据勒维耶的计算定位。',
+    gravity: '11.15 m/s²',
+    orbitPeriod: '164.8 年',
+    rotatePeriod: '16h 6m',
+    moons: 16,
+  },
+];
+
+export const ASTEROID_BELT = { inner: 2.2, outer: 3.2 }; // AU
+export const KUIPER_BELT = { inner: 35, outer: 55 }; // AU
+
+// Scale factor: 1 AU = ORBIT_SCALE units
+export const ORBIT_SCALE = 40;
+
+export function getPlanetByKey(key) {
+  const lower = key.toLowerCase();
+  return PLANETS.find(p =>
+    p.name.toLowerCase() === lower ||
+    p.nameCn === key ||
+    p.distance.toString() === key
+  );
+}

@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='20' fill='%23FDE047'/%3E%3C/svg%3E" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Starpath · 星轨太阳系</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { width: 100%; height: 100%; overflow: hidden; background: #050510; font-family: 'Inter', -apple-system, system-ui, sans-serif; color: #E2E8F0; }
+      #app { position: fixed; inset: 0; }
+      canvas { display: block; }
+
+      /* ============ LOADING ============ */
+      #loading {
+        position: fixed; inset: 0; z-index: 1000;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        background: radial-gradient(ellipse at center, #0f172a 0%, #050510 70%);
+        transition: opacity 0.8s ease;
+      }
+      #loading.hidden { opacity: 0; pointer-events: none; }
+      #loading .logo {
+        font-size: 28px; font-weight: 700; letter-spacing: 0.3em;
+        background: linear-gradient(135deg, #6EE7F9, #F472B6);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        margin-bottom: 24px;
+      }
+      #loading .ring {
+        width: 48px; height: 48px; border: 2px solid rgba(110,231,249,0.2);
+        border-top-color: #6EE7F9; border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      #loading .tip { margin-top: 16px; font-size: 12px; color: #64748b; letter-spacing: 0.2em; }
+
+      /* ============ HUD ============ */
+      #hud {
+        position: fixed; top: 24px; left: 24px; z-index: 10;
+        display: flex; flex-direction: column; gap: 8px;
+        pointer-events: none;
+      }
+      #hud .brand {
+        font-size: 14px; font-weight: 600; letter-spacing: 0.4em; color: #6EE7F9;
+        text-shadow: 0 0 20px rgba(110,231,249,0.5);
+      }
+      #hud .coord {
+        font-size: 11px; font-family: 'Courier New', monospace; color: #94A3B8; letter-spacing: 0.1em;
+      }
+      #hud .target {
+        font-size: 32px; font-weight: 700; letter-spacing: 0.1em; color: #FDE047;
+        text-shadow: 0 0 30px rgba(253,224,71,0.6);
+        opacity: 0; transition: opacity 0.4s ease;
+      }
+      #hud .target.visible { opacity: 1; }
+
+      /* ============ SEARCH ============ */
+      #search-wrap {
+        position: fixed; top: 24px; right: 24px; z-index: 10;
+        width: 320px;
+      }
+      #search-input {
+        width: 100%; padding: 12px 16px;
+        background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px);
+        border: 1px solid rgba(110,231,249,0.2); border-radius: 12px;
+        color: #E2E8F0; font-size: 14px; font-family: 'Inter', sans-serif;
+        outline: none; transition: all 0.3s ease;
+        box-shadow: 0 0 20px rgba(110,231,249,0.05);
+      }
+      #search-input::placeholder { color: #64748b; letter-spacing: 0.1em; }
+      #search-input:focus {
+        border-color: rgba(110,231,249,0.6);
+        box-shadow: 0 0 30px rgba(110,231,249,0.2);
+      }
+      #search-results {
+        margin-top: 8px; display: none;
+        background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px);
+        border: 1px solid rgba(110,231,249,0.2); border-radius: 12px; overflow: hidden;
+      }
+      #search-results.visible { display: block; }
+      #search-results .result-item {
+        padding: 12px 16px; cursor: pointer;
+        transition: background 0.2s; font-size: 14px;
+        display: flex; justify-content: space-between; align-items: center;
+      }
+      #search-results .result-item:hover { background: rgba(110,231,249,0.1); }
+      #search-results .result-item .name-cn { color: #E2E8F0; }
+      #search-results .result-item .name-en { color: #64748b; font-size: 12px; letter-spacing: 0.1em; }
+
+      /* ============ CONTROL PANEL ============ */
+      #control-panel {
+        position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+        z-index: 10;
+        background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px);
+        border: 1px solid rgba(110,231,249,0.15); border-radius: 16px;
+        padding: 16px 24px;
+        display: flex; align-items: center; gap: 28px;
+        box-shadow: 0 0 40px rgba(0,0,0,0.5), 0 0 20px rgba(110,231,249,0.05);
+      }
+      .cp-group { display: flex; flex-direction: column; gap: 6px; }
+      .cp-label { font-size: 10px; color: #64748b; letter-spacing: 0.25em; text-transform: uppercase; }
+      .cp-buttons { display: flex; gap: 6px; }
+      .cp-btn {
+        padding: 8px 14px; background: rgba(30,41,59,0.8); border: 1px solid rgba(110,231,249,0.15);
+        border-radius: 8px; color: #E2E8F0; font-size: 12px; font-family: 'Inter', sans-serif;
+        cursor: pointer; transition: all 0.2s; letter-spacing: 0.05em;
+      }
+      .cp-btn:hover { border-color: rgba(110,231,249,0.5); color: #6EE7F9; }
+      .cp-btn.active { background: rgba(110,231,249,0.15); border-color: #6EE7F9; color: #6EE7F9; }
+      .cp-btn.accent { background: rgba(244,114,182,0.1); border-color: rgba(244,114,182,0.3); color: #F472B6; }
+      .cp-btn.accent:hover { border-color: #F472B6; }
+      .cp-slider { display: flex; align-items: center; gap: 12px; }
+      .cp-slider input[type=range] {
+        width: 120px; height: 4px; -webkit-appearance: none; background: rgba(71,85,105,0.6);
+        border-radius: 2px; outline: none;
+      }
+      .cp-slider input[type=range]::-webkit-slider-thumb {
+        -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%;
+        background: #6EE7F9; cursor: pointer; box-shadow: 0 0 10px rgba(110,231,249,0.6);
+      }
+      .cp-speed-val { font-family: 'Courier New', monospace; font-size: 12px; color: #6EE7F9; min-width: 36px; text-align: right; }
+
+      /* ============ INFO PANEL ============ */
+      #info-panel {
+        position: fixed; top: 50%; right: 24px; transform: translateY(-50%) translateX(120%);
+        z-index: 10; width: 340px;
+        background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(16px);
+        border: 1px solid rgba(244,114,182,0.2); border-radius: 16px;
+        padding: 24px;
+        transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        box-shadow: 0 0 40px rgba(0,0,0,0.5), 0 0 30px rgba(244,114,182,0.08);
+      }
+      #info-panel.visible { transform: translateY(-50%) translateX(0); }
+      #info-panel .ip-close {
+        position: absolute; top: 12px; right: 12px;
+        width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(244,114,182,0.2);
+        background: transparent; color: #94A3B8; cursor: pointer; font-size: 16px;
+        transition: all 0.2s;
+      }
+      #info-panel .ip-close:hover { border-color: #F472B6; color: #F472B6; }
+      #info-panel .ip-name-cn {
+        font-size: 28px; font-weight: 700; letter-spacing: 0.05em;
+        background: linear-gradient(135deg, #6EE7F9, #F472B6);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        margin-bottom: 4px;
+      }
+      #info-panel .ip-name-en { font-size: 14px; color: #64748b; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 16px; }
+      #info-panel .ip-stats {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; margin-bottom: 16px;
+      }
+      #info-panel .ip-stat { display: flex; flex-direction: column; gap: 2px; }
+      #info-panel .ip-stat-label { font-size: 10px; color: #64748b; letter-spacing: 0.15em; text-transform: uppercase; }
+      #info-panel .ip-stat-value { font-size: 13px; font-weight: 500; color: #E2E8F0; font-family: 'Courier New', monospace; }
+      #info-panel .ip-desc { font-size: 13px; color: #94A3B8; line-height: 1.7; letter-spacing: 0.02em; }
+      #info-panel .ip-fact {
+        margin-top: 12px; padding: 12px;
+        background: rgba(253,224,71,0.05); border-left: 2px solid #FDE047; border-radius: 0 8px 8px 0;
+        font-size: 12px; color: #FDE047; font-style: italic;
+      }
+
+      /* ============ TIMELINE ============ */
+      #timeline {
+        position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+        z-index: 10;
+        display: flex; align-items: center; gap: 12px;
+        font-family: 'Courier New', monospace; font-size: 11px;
+      }
+      #timeline .tl-date { color: #64748b; letter-spacing: 0.1em; }
+      #timeline .tl-bar {
+        width: 240px; height: 4px; background: rgba(71,85,105,0.4); border-radius: 2px; position: relative; overflow: visible;
+      }
+      #timeline .tl-progress {
+        position: absolute; left: 0; top: 0; height: 100%; width: 50%;
+        background: linear-gradient(90deg, #6EE7F9, #F472B6); border-radius: 2px;
+      }
+      #timeline .tl-marker {
+        position: absolute; top: 50%; transform: translate(-50%, -50%);
+        width: 10px; height: 10px; border-radius: 50%;
+        background: #FDE047; box-shadow: 0 0 10px rgba(253,224,71,0.8);
+      }
+
+      /* ============ FLY MODE INDICATOR ============ */
+      #fly-indicator {
+        position: fixed; bottom: 100px; right: 24px; z-index: 10;
+        display: none; align-items: center; gap: 8px;
+        background: rgba(244,114,182,0.15); border: 1px solid rgba(244,114,182,0.4); border-radius: 8px;
+        padding: 8px 14px; font-size: 11px; color: #F472B6; letter-spacing: 0.2em;
+      }
+      #fly-indicator.active { display: flex; }
+
+      /* ============ ORBIT TOGGLE ============ */
+      .toggle-dot {
+        display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+        background: #64748b; margin-right: 6px; transition: background 0.2s;
+      }
+      .cp-btn .toggle-dot.on { background: #6EE7F9; box-shadow: 0 0 8px rgba(110,231,249,0.6); }
+
+      /* ============ RESPONSIVE ============ */
+      @media (max-width: 768px) {
+        #search-wrap { width: calc(100% - 48px); top: 80px; }
+        #control-panel { flex-wrap: wrap; gap: 16px; padding: 12px 16px; width: calc(100% - 32px); }
+        #info-panel { width: calc(100% - 48px); right: 24px; left: 24px; transform: translateY(-50%) translateX(120%); }
+        #info-panel.visible { transform: translateY(-50%) translateX(0); }
+        #hud .target { font-size: 22px; }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Loading -->
+    <div id="loading">
+      <div class="logo">STARPATH</div>
+      <div class="ring"></div>
+      <div class="tip">INITIALIZING SOLAR SYSTEM</div>
+    </div>
+
+    <!-- Three.js canvas -->
+    <div id="app"></div>
+
+    <!-- HUD -->
+    <div id="hud">
+      <div class="brand">STARPATH · 星轨太阳系</div>
+      <div class="coord" id="hud-coord">X: 0.00  Y: 0.00  Z: 0.00</div>
+      <div class="target" id="hud-target">EARTH</div>
+    </div>
+
+    <!-- Search -->
+    <div id="search-wrap">
+      <input type="text" id="search-input" placeholder="搜索天体 / SEARCH CELESTIAL BODY..." autocomplete="off" />
+      <div id="search-results"></div>
+    </div>
+
+    <!-- Control Panel -->
+    <div id="control-panel">
+      <div class="cp-group">
+        <div class="cp-label">TIME</div>
+        <div class="cp-slider">
+          <button class="cp-btn" id="btn-pause">❚❚</button>
+          <input type="range" id="speed-slider" min="0" max="500" value="10" />
+          <div class="cp-speed-val" id="speed-val">1.0×</div>
+        </div>
+      </div>
+      <div class="cp-group">
+        <div class="cp-label">VIEW</div>
+        <div class="cp-buttons">
+          <button class="cp-btn active" id="btn-orbits"><span class="toggle-dot on"></span>轨道</button>
+          <button class="cp-btn active" id="btn-labels"><span class="toggle-dot on"></span>航点</button>
+          <button class="cp-btn active" id="btn-asteroids"><span class="toggle-dot on"></span>小行星带</button>
+          <button class="cp-btn" id="btn-bloom"><span class="toggle-dot on"></span>辉光</button>
+        </div>
+      </div>
+      <div class="cp-group">
+        <div class="cp-label">MODE</div>
+        <div class="cp-buttons">
+          <button class="cp-btn active" id="btn-orbit">轨道</button>
+          <button class="cp-btn" id="btn-fly">✈ 飞行 (WASD)</button>
+          <button class="cp-btn accent" id="btn-reset">重置视角</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div id="timeline">
+      <div class="tl-date" id="tl-date">2026.08.09</div>
+      <div class="tl-bar"><div class="tl-progress"><div class="tl-marker"></div></div></div>
+      <div class="tl-date">2126</div>
+    </div>
+
+    <!-- Fly mode indicator -->
+    <div id="fly-indicator">✈ FLY MODE · WASD 移动 / QE 升降 / Shift 加速</div>
+
+    <!-- Info Panel -->
+    <div id="info-panel">
+      <button class="ip-close" id="ip-close">✕</button>
+      <div class="ip-name-cn" id="ip-name-cn">地球</div>
+      <div class="ip-name-en" id="ip-name-en">EARTH</div>
+      <div class="ip-stats">
+        <div class="ip-stat"><span class="ip-stat-label">直径</span><span class="ip-stat-value" id="ip-diameter">12,742 km</span></div>
+        <div class="ip-stat"><span class="ip-stat-label">距日</span><span class="ip-stat-value" id="ip-distance">1.00 AU</span></div>
+        <div class="ip-stat"><span class="ip-stat-label">公转</span><span class="ip-stat-value" id="ip-orbit">365.25 天</span></div>
+        <div class="ip-stat"><span class="ip-stat-label">自转</span><span class="ip-stat-value" id="ip-rotate">23h 56m</span></div>
+        <div class="ip-stat"><span class="ip-stat-label">卫星</span><span class="ip-stat-value" id="ip-moons">1</span></div>
+        <div class="ip-stat"><span class="ip-stat-label">重力</span><span class="ip-stat-value" id="ip-gravity">9.81 m/s²</span></div>
+      </div>
+      <div class="ip-desc" id="ip-desc">地球是太阳系中唯一已知存在生命的行星，表面 71% 被液态水覆盖。</div>
+      <div class="ip-fact" id="ip-fact">🌍 地球的自转正在逐渐减慢，每 100 年增加约 1.8 毫秒。</div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
